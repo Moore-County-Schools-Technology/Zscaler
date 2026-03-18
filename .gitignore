@@ -14,5 +14,10 @@ __pycache__/
 # Screenshots
 CleanShot*.png
 
+# Docs/assets not for repo
+DEPLOYMENT.md
+static/logo.png
+docs/superpowers/
+
 # IDE
 .vscode/
