@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.claude/
+*.log
+*.jsonl
+zscaler_checker_config.json
+auth_config.json
+*.json.bak
+docs/
+check_*.py
+deep_search.py

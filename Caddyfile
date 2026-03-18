@@ -1,0 +1,16 @@
+# Replace with your actual subdomain
+urlchecker.ncmcs.org {
+    # Use your wildcard certificate
+    tls /etc/caddy/certs/wildcard.crt /etc/caddy/certs/wildcard.key
+
+    # Reverse proxy to the Flask app
+    reverse_proxy app:5100
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+}

@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    container_name: zscaler-url-checker
+    restart: unless-stopped
+    volumes:
+      - ./zscaler_checker_config.json:/app/zscaler_checker_config.json:ro
+      - ./auth_config.json:/app/auth_config.json:ro
+      # Uncomment if using Google Groups auth:
+      # - ./service-account.json:/app/service-account.json:ro
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

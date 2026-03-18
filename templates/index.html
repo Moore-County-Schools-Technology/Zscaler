@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Checker — Is It Blocked?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ── Theme variables ──────────────────── */
+        [data-theme="light"] {
+            --bg: #f4f5f7;
+            --surface: #ffffff;
+            --surface-alt: #f0f1f3;
+            --surface-hover: #f8f9fa;
+            --border: #dfe1e6;
+            --border-light: #ebecf0;
+            --text: #172b4d;
+            --text-secondary: #5e6c84;
+            --text-dim: #97a0af;
+            --accent: #0052cc;
+            --accent-hover: #0747a6;
+            --accent-subtle: #deebff;
+            --green: #00875a;
+            --green-bg: #e3fcef;
+            --green-border: #abf5d1;
+            --red: #de350b;
+            --red-bg: #ffebe6;
+            --red-border: #ffbdad;
+            --yellow: #ff991f;
+            --yellow-bg: #fffae6;
+            --yellow-border: #ffe380;
+            --shadow: 0 1px 2px rgba(9,30,66,0.08), 0 0 1px rgba(9,30,66,0.12);
+            --shadow-lg: 0 4px 8px -2px rgba(9,30,66,0.08), 0 0 1px rgba(9,30,66,0.16);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-alt: #1c2128;
+            --surface-hover: #1c2128;
+            --border: #30363d;
+            --border-light: #21262d;
+            --text: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-dim: #6e7681;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --accent-subtle: #0d1d30;
+            --green: #3fb950;
+            --green-bg: #0d2117;
+            --green-border: #1b4332;
+            --red: #f85149;
+            --red-bg: #1f0c0c;
+            --red-border: #3d1414;
+            --yellow: #d29922;
+            --yellow-bg: #1d1908;
+            --yellow-border: #3d3011;
+            --shadow: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        /* ── Header ───────────────────────────── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 52px;
+        }
+        .header h1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .header-logo { height: 28px; }
+        [data-theme="light"] .header-logo { filter: invert(1) hue-rotate(180deg); }
+        .header-nav {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+        .header a {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .header a:hover { background: var(--surface-alt); color: var(--text); }
+        .header a.active { color: var(--text); font-weight: 600; }
+
+        .theme-toggle {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-left: 8px;
+            transition: all 0.15s;
+        }
+        .theme-toggle:hover { background: var(--surface-alt); color: var(--text); border-color: var(--text-dim); }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 8px;
+            position: relative;
+        }
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            transition: border-color 0.15s;
+        }
+        .user-avatar:hover { border-color: var(--accent); }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: 38px;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            z-index: 100;
+            overflow: hidden;
+        }
+        .user-dropdown.open { display: block; }
+        .user-dropdown-header {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .user-dropdown-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .user-dropdown-email {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+        .user-dropdown-role {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 6px;
+            background: var(--accent-subtle);
+            color: var(--accent);
+        }
+        .user-dropdown a {
+            display: block;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.1s;
+        }
+        .user-dropdown a:hover { background: var(--surface-alt); }
+
+        /* ── Main ─────────────────────────────── */
+        .main { max-width: 920px; margin: 0 auto; padding: 40px 24px; }
+
+        /* ── Hero ─────────────────────────────── */
+        .hero { text-align: center; margin-bottom: 32px; }
+        .hero h2 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        .hero p { color: var(--text-secondary); font-size: 14px; }
+
+        /* ── Tabs ─────────────────────────────── */
+        .search-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 7px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab:first-child { border-radius: 8px 0 0 8px; }
+        .tab:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+        .tab.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .tab:hover:not(.active) { background: var(--surface-alt); color: var(--text-secondary); }
+
+        /* ── Search ────────────────────────────── */
+        .search-row {
+            display: flex;
+            gap: 8px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 15px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+        .search-input::placeholder { color: var(--text-dim); }
+
+        .group-select {
+            padding: 12px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            outline: none;
+            min-width: 160px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .group-select:focus { border-color: var(--accent); }
+
+        .search-textarea {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            display: block;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            outline: none;
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+        .search-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-subtle); }
+
+        /* ── Buttons ───────────────────────────── */
+        .btn {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:disabled { opacity: 0.5; cursor: wait; }
+        .btn-sm { padding: 7px 14px; font-size: 12px; }
+        .btn-outline {
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { background: var(--surface-alt); color: var(--text); }
+
+        .batch-actions {
+            max-width: 700px;
+            margin: 12px auto 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .batch-hint { font-size: 12px; color: var(--text-dim); }
+
+        /* ── Loading ───────────────────────────── */
+        .loading { display: none; text-align: center; padding: 48px 0; }
+        .loading.visible { display: block; }
+        .spinner {
+            width: 24px; height: 24px;
+            border: 2.5px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p { font-size: 13px; color: var(--text-dim); }
+
+        /* ── Results ───────────────────────────── */
+        .results { display: none; margin-top: 24px; }
+        .results.visible { display: block; }
+        .results-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .results-bar h3 { font-size: 14px; font-weight: 600; }
+        .results-bar .meta { font-size: 12px; color: var(--text-dim); display: flex; gap: 12px; align-items: center; }
+
+        /* ── Result Card ───────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: box-shadow 0.15s;
+        }
+        .card:hover { box-shadow: var(--shadow-lg); }
+
+        .card-top {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .card-top:hover { background: var(--surface-hover); }
+
+        .card-verdict {
+            width: 76px;
+            flex-shrink: 0;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .verdict-BLOCKED { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+        .verdict-CAUTION { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+        .verdict-ALLOWED { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+        .verdict-ERROR { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+
+        .card-info { flex: 1; min-width: 0; }
+        .card-url { font-size: 14px; font-weight: 600; word-break: break-all; }
+        .card-cats { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .cat-tag {
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--surface-alt);
+            border: 1px solid var(--border-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+        .card-rule-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .card-chevron {
+            color: var(--text-dim);
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .card.open .card-chevron { transform: rotate(90deg); }
+
+        .security-bar {
+            background: var(--red-bg);
+            border-top: 1px solid var(--red-border);
+            padding: 8px 18px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--red);
+        }
+
+        /* ── Levels row ───────────────────────── */
+        .levels-row { display: flex; gap: 6px; flex-shrink: 0; }
+        .level-pill {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            text-align: center;
+            min-width: 66px;
+        }
+        .level-pill .lname { display: block; font-size: 9px; font-weight: 500; margin-bottom: 1px; opacity: 0.8; }
+        .pill-blocked { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+        .pill-cautioned { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+        .pill-allowed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+        /* ── Detail Panel ──────────────────────── */
+        .card-detail {
+            display: none;
+            border-top: 1px solid var(--border-light);
+            padding: 16px 18px;
+            background: var(--surface-alt);
+        }
+        .card.open .card-detail { display: block; }
+
+        .detail-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        .detail-section { margin-bottom: 16px; }
+        .detail-section:last-child { margin-bottom: 0; }
+
+        .rules-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .rules-tbl th {
+            text-align: left;
+            padding: 8px 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-light);
+        }
+        .rules-tbl td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: top;
+        }
+        .rules-tbl tr:last-child td { border-bottom: none; }
+        .act-BLOCK { color: var(--red); font-weight: 600; }
+        .act-CAUTION { color: var(--yellow); font-weight: 600; }
+        .act-ALLOW { color: var(--green); font-weight: 600; }
+        .scope { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); }
+
+        .error-card {
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            color: var(--red);
+            font-size: 13px;
+        }
+
+        /* ── Single / Batch toggle ────────────── */
+        .single-mode {}
+        .batch-mode { display: none; }
+        .mode-batch .single-mode { display: none; }
+        .mode-batch .batch-mode { display: block; }
+
+        /* ── Policy Overview ──────────────────── */
+        #policy-view { display: none; }
+
+        .policy-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .policy-search {
+            flex: 1;
+            max-width: 320px;
+            padding: 10px 14px;
+            font-size: 13px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .policy-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-subtle); }
+        .policy-stats { font-size: 12px; color: var(--text-dim); }
+
+        .policy-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .policy-tbl th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            background: var(--surface-alt);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+        .policy-tbl td {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .policy-tbl tr:last-child td { border-bottom: none; }
+        .policy-tbl tr:hover td { background: var(--surface-hover); }
+
+        .status-cell {
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-BLOCKED { color: var(--red); }
+        .status-CAUTION { color: var(--yellow); }
+        .status-ALLOWED { color: var(--green); }
+
+        /* ── Diagnostic Results ───────────────── */
+        .diag-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .diag-verdict {
+            padding: 18px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .diag-verdict .icon { font-size: 22px; }
+        .diag-type-zscaler_blocked .diag-verdict { background: var(--red-bg); color: var(--red); border-bottom: 2px solid var(--red-border); }
+        .diag-type-zscaler_caution .diag-verdict { background: var(--yellow-bg); color: var(--yellow); border-bottom: 2px solid var(--yellow-border); }
+        .diag-type-ssl_error .diag-verdict { background: var(--yellow-bg); color: var(--yellow); border-bottom: 2px solid var(--yellow-border); }
+        .diag-type-site_down .diag-verdict { background: var(--surface-alt); color: var(--text-secondary); border-bottom: 2px solid var(--border); }
+        .diag-type-ok .diag-verdict { background: var(--green-bg); color: var(--green); border-bottom: 2px solid var(--green-border); }
+
+        .diag-details { padding: 14px 22px; }
+        .diag-details summary {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px 0;
+        }
+        .diag-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .diag-detail-box {
+            background: var(--surface-alt);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+        .diag-detail-box h4 {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .diag-detail-box p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .diag-action-box {
+            margin-top: 12px;
+            background: var(--surface);
+            border-color: var(--accent);
+        }
+        .diag-note {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        /* ── Compare selects ──────────────────── */
+        .compare-select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 13px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            outline: none;
+        }
+        .compare-select:focus { border-color: var(--accent); }
+
+        .compare-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 700px) {
+            /* Header: stack on mobile */
+            .header {
+                flex-direction: column;
+                height: auto;
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            .header h1 { font-size: 13px; }
+            .header-logo { height: 24px; }
+            .header-nav { flex-wrap: wrap; justify-content: center; gap: 4px; }
+            .header a { font-size: 12px; padding: 5px 8px; }
+            .theme-toggle { width: 30px; height: 30px; font-size: 14px; margin-left: 4px; }
+
+            /* Main content */
+            .main { padding: 20px 12px; }
+            .hero h2 { font-size: 20px; }
+            .hero p { font-size: 13px; }
+
+            /* Search: stack vertically */
+            .search-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .search-input { font-size: 16px; /* prevents iOS zoom */ }
+            .group-select { min-width: unset; width: 100%; font-size: 16px; }
+            .search-row .btn { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Tabs */
+            .tab { padding: 7px 14px; font-size: 12px; }
+
+            /* Batch textarea */
+            .search-textarea { font-size: 14px; }
+            .batch-actions { flex-direction: column; gap: 8px; }
+            .batch-actions .btn { width: 100%; justify-content: center; }
+
+            /* Result cards */
+            .card-top {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px 14px;
+                gap: 10px;
+            }
+            .card-verdict { width: auto; }
+            .card-url { font-size: 13px; }
+            .levels-row { flex-wrap: wrap; }
+            .level-pill { min-width: 56px; font-size: 9px; padding: 5px 8px; }
+            .card-detail { padding: 12px 14px; }
+            .rules-tbl { font-size: 11px; }
+
+            /* Diagnose card */
+            .diag-detail-grid { grid-template-columns: 1fr; }
+            .diag-verdict { font-size: 13px; }
+            .diag-verdict .icon { font-size: 22px; }
+
+            /* Policy overview */
+            .policy-card { padding: 12px; }
+
+            /* User dropdown: ensure visible */
+            .user-dropdown { right: -8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img class="header-logo" src="{{ url_for('static', filename='logo.png') }}" alt="MCS">
+            <h1>Zscaler Troubleshooting Tool</h1>
+        </div>
+        <div class="header-nav">
+            <a href="#" onclick="showView('checker'); return false;" id="nav-checker" class="active">Check URLs</a>
+            <a href="#" onclick="showView('policy'); return false;" id="nav-policy" style="display:none;">Policy Overview</a>
+            <a href="/setup" id="nav-settings" style="display:none;">Settings</a>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" id="theme-btn">&#9790;</button>
+            <div class="user-menu" id="user-menu" style="display:none;">
+                <img class="user-avatar" id="user-avatar" src="" alt="" referrerpolicy="no-referrer" onclick="document.getElementById('user-dropdown').classList.toggle('open')">
+                <div class="user-dropdown" id="user-dropdown">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-name" id="user-name"></div>
+                        <div class="user-dropdown-email" id="user-email"></div>
+                        <div class="user-dropdown-role" id="user-role"></div>
+                    </div>
+                    <a href="/logout">Sign out</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main" id="app">
+        <!-- Policy Overview View -->
+        <div id="policy-view">
+            <div class="hero">
+                <h2>Policy Overview</h2>
+                <p>See all filtering rules or compare what different groups can access.</p>
+            </div>
+
+            <div class="search-tabs" style="margin-bottom:16px;">
+                <button class="tab active" id="tab-rules" onclick="setPolicyTab('rules')">All Rules</button>
+                <button class="tab" id="tab-compare" onclick="setPolicyTab('compare')">Compare Groups</button>
+            </div>
+
+            <!-- All Rules sub-view -->
+            <div id="rules-view">
+                <div class="policy-toolbar">
+                    <input type="text" class="policy-search" id="rules-filter" placeholder="Search rules..." oninput="filterRules()">
+                    <span class="policy-stats" id="rules-stats"></span>
+                    <button class="btn btn-outline btn-sm" onclick="loadAllRules()">Refresh</button>
+                </div>
+                <div class="loading" id="rules-loading">
+                    <div class="spinner"></div>
+                    <p>Loading rules...</p>
+                </div>
+                <div id="rules-table-wrap"></div>
+            </div>
+
+            <!-- Compare Groups sub-view -->
+            <div id="compare-view" style="display:none;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:end;">
+                    <div style="flex:1;">
+                        <label class="compare-label">Group A</label>
+                        <select id="compare-a" class="compare-select"></select>
+                    </div>
+                    <div style="padding-bottom:6px; font-size:16px; color:var(--text-dim); font-weight:600;">vs</div>
+                    <div style="flex:1;">
+                        <label class="compare-label">Group B</label>
+                        <select id="compare-b" class="compare-select"></select>
+                    </div>
+                    <button class="btn btn-primary" onclick="runCompare()">Compare</button>
+                </div>
+                <div class="loading" id="compare-loading">
+                    <div class="spinner"></div>
+                    <p>Comparing...</p>
+                </div>
+                <div id="compare-results"></div>
+            </div>
+        </div>
+
+        <!-- URL Checker View -->
+        <div id="checker-view">
+        <div class="hero">
+            <h2>Check if a Website is Blocked</h2>
+            <p>Enter a website address below, choose your students' grade level from the dropdown, and click <strong>Check</strong> to see if they can access it.</p>
+        </div>
+
+        <div class="search-tabs">
+            <button class="tab active" onclick="setMode('single')">Single URL</button>
+            <button class="tab" onclick="setMode('batch')">Paste a List</button>
+        </div>
+
+        <div class="single-mode">
+            <div class="search-row">
+                <input type="text" class="search-input" id="url-input"
+                    placeholder="youtube.com, kahoot.it, tiktok.com ..."
+                    onkeydown="if(event.key==='Enter') checkSingle()" autofocus>
+                <select id="group-select" class="group-select" onchange="this.style.borderColor=''">
+                    <option value="" disabled selected>Select grade level...</option>
+                    <option value="all">All (global)</option>
+                </select>
+                <button class="btn btn-primary" id="btn-go" onclick="checkSingle()">Check</button>
+                <button class="btn btn-outline" id="btn-diagnose" onclick="runDiagnose()" title="Check if Zscaler is causing the issue">Troubleshoot</button>
+            </div>
+        </div>
+
+        <div class="batch-mode">
+            <textarea class="search-textarea" id="urls-input"
+                placeholder="Paste URLs here, one per line:&#10;&#10;youtube.com&#10;kahoot.it&#10;docs.google.com&#10;tiktok.com"></textarea>
+            <div class="batch-actions">
+                <button class="btn btn-primary" id="btn-batch" onclick="checkBatch()">Check All</button>
+                <span class="batch-hint">Up to 50 URLs at once</span>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loading-text">Checking...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="results-bar">
+                <h3 id="results-title">Results</h3>
+                <div class="meta">
+                    <span id="results-summary"></span>
+                    <button class="btn btn-outline btn-sm" id="btn-csv" style="display:none;" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </div>
+            <div id="results-list"></div>
+        </div>
+    </div>
+    </div>
+
+<script>
+// ── Theme ────────────────────────────────
+function getTheme() {
+    return localStorage.getItem('theme') || 'dark';
+}
+function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('theme-btn').innerHTML = t === 'dark' ? '&#9788;' : '&#9790;';
+    localStorage.setItem('theme', t);
+}
+function toggleTheme() {
+    applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+
+// ── Auth ─────────────────────────────────
+(async function loadAuthStatus() {
+    try {
+        const r = await fetch('/api/auth-status');
+        const d = await r.json();
+        if (!d.auth_enabled) {
+            // No auth — show everything for everyone
+            document.getElementById('nav-settings').style.display = '';
+            document.getElementById('nav-policy').style.display = '';
+            canViewPolicy = true;
+            return;
+        }
+        if (!d.logged_in) return;
+
+        // Show user menu
+        const menu = document.getElementById('user-menu');
+        menu.style.display = 'flex';
+        if (d.user.picture) {
+            document.getElementById('user-avatar').src = d.user.picture;
+        }
+        document.getElementById('user-name').textContent = d.user.name;
+        document.getElementById('user-email').textContent = d.user.email;
+        document.getElementById('user-role').textContent = d.role;
+
+        // Show settings link for admins
+        if (d.role === 'admin') {
+            document.getElementById('nav-settings').style.display = '';
+        }
+        // Show policy overview for authorized users
+        if (d.can_view_policy) {
+            document.getElementById('nav-policy').style.display = '';
+            canViewPolicy = true;
+        }
+    } catch(e) {}
+})();
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dd = document.getElementById('user-dropdown');
+    const avatar = document.getElementById('user-avatar');
+    if (dd && !dd.contains(e.target) && e.target !== avatar) {
+        dd.classList.remove('open');
+    }
+});
+
+// ── Mode ─────────────────────────────────
+let mode = 'single';
+let allResults = [];
+
+function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (m==='single'&&i===0)||(m==='batch'&&i===1)));
+    document.getElementById('app').classList.toggle('mode-batch', m === 'batch');
+}
+
+async function checkSingle() {
+    const url = document.getElementById('url-input').value.trim();
+    if (!url) return;
+
+    const sel = document.getElementById('group-select');
+    const groupId = sel.value;
+    const groupName = sel.selectedOptions[0]?.text || '';
+
+    if (!groupId) {
+        sel.style.borderColor = 'var(--red)';
+        sel.focus();
+        showError('Please select a grade level before checking.');
+        return;
+    }
+    sel.style.borderColor = '';
+
+    if (groupId !== 'all') {
+        showLoading('Checking ' + url + ' for ' + groupName + '...');
+        try {
+            const r = await fetch('/api/check-group', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url, group_id: groupId, group_name: groupName}) });
+            const d = await r.json();
+            hideLoading();
+            if (d.error) { showError(d.error); return; }
+            allResults = [d];
+            render(allResults);
+        } catch(e) {
+            hideLoading();
+            showError('Network error: ' + e.message);
+        }
+    } else {
+        showLoading('Checking ' + url + '...');
+        try {
+            const r = await fetch('/api/check', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+            const d = await r.json();
+            hideLoading();
+            if (d.error) { showError(d.error); return; }
+            allResults = [d];
+            render(allResults);
+        } catch(e) {
+            hideLoading();
+            showError('Network error: ' + e.message);
+        }
+    }
+}
+
+// Populate group dropdown on load
+(async function loadGroupDropdown() {
+    try {
+        const r = await fetch('/api/config-status');
+        const d = await r.json();
+        if (!d.discovered) return;
+        const sel = document.getElementById('group-select');
+        const groups = d.discovered.groups || [];
+        const allowed = [
+            'Elementary School Students', 'Primary School Students',
+            'Middle School Restrict', 'Middle School Students',
+            'High School Students', 'Advanced Students',
+            'High School Restrict',
+            'StudentRestrict', 'Locked'
+        ];
+        const filtered = groups.filter(g => allowed.includes(g.name));
+        const sorted = filtered.sort((a, b) => allowed.indexOf(a.name) - allowed.indexOf(b.name));
+        for (const g of sorted) {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.name;
+            sel.appendChild(opt);
+        }
+    } catch(e) {}
+})();
+
+async function runDiagnose() {
+    const url = document.getElementById('url-input').value.trim();
+    if (!url) return;
+
+    const sel = document.getElementById('group-select');
+    const groupId = sel.value;
+    const groupName = sel.selectedOptions[0]?.text || '';
+
+    if (!groupId) {
+        sel.style.borderColor = 'var(--red)';
+        sel.focus();
+        showError('Please select a grade level before troubleshooting.');
+        return;
+    }
+    sel.style.borderColor = '';
+
+    showLoading('Troubleshooting ' + url + ' for ' + groupName + '...');
+
+    try {
+        const r = await fetch('/api/diagnose', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url, group_id: groupId, group_name: groupName}) });
+        const d = await r.json();
+        hideLoading();
+        if (d.error) { showError(d.error); return; }
+        renderDiagnose(d);
+    } catch(e) {
+        hideLoading();
+        showError('Network error: ' + e.message);
+    }
+}
+
+function renderDiagnose(d) {
+    const sec = document.getElementById('results');
+    const list = document.getElementById('results-list');
+    sec.classList.add('visible');
+    document.getElementById('results-title').textContent = 'Troubleshoot Results';
+    document.getElementById('results-summary').textContent = '';
+    document.getElementById('btn-csv').style.display = 'none';
+
+    const icons = {
+        zscaler_blocked: '&#128683;',
+        zscaler_caution: '&#9888;&#65039;',
+        ssl_error: '&#128274;',
+        site_down: '&#128546;',
+        ok: '&#9989;'
+    };
+
+    const groupName = d.group_name || 'students';
+
+    // Website status (friendly)
+    const reach = d.reachability || {};
+    let websiteStatus = '';
+    if (reach.reachable) {
+        websiteStatus = 'Website is online';
+    } else if (reach.ssl_error) {
+        websiteStatus = 'Website has a security issue';
+    } else {
+        websiteStatus = 'Website is down or not responding';
+    }
+
+    // Filter status (friendly)
+    const zs = d.zscaler || {};
+    let filterStatus = '';
+    if (zs.error) {
+        filterStatus = 'Could not check filter status';
+    } else if (d.verdict_type === 'zscaler_blocked') {
+        filterStatus = `Blocked for ${esc(groupName)}`;
+    } else if (d.verdict_type === 'zscaler_caution') {
+        filterStatus = `Shows a warning page for ${esc(groupName)}`;
+    } else {
+        filterStatus = `Allowed for ${esc(groupName)}`;
+    }
+
+    // What to do (actionable guidance)
+    let whatToDo = '';
+    if (d.verdict_type === 'zscaler_blocked') {
+        whatToDo = 'Contact IT and let them know which website you need unblocked and what grade level needs access. Include the reason (e.g., "needed for a lesson on...").';
+    } else if (d.verdict_type === 'zscaler_caution') {
+        whatToDo = 'Students will see a warning page but can click through to continue. If this is disruptive, contact IT to have the warning removed.';
+    } else if (d.verdict_type === 'ssl_error') {
+        whatToDo = 'Try using a different link to the same content. If the problem persists, contact IT — the site may need a security exception.';
+    } else if (d.verdict_type === 'site_down') {
+        whatToDo = 'This isn\'t a filtering issue — the website itself is having problems. Try again later, or find an alternative resource.';
+    } else {
+        whatToDo = 'The site should be accessible. If students still can\'t reach it, check their device Wi-Fi connection or try a different browser.';
+    }
+
+    // Technical details (collapsed, for IT)
+    let techReach = '';
+    if (reach.reachable) {
+        techReach = `HTTP ${reach.status_code}`;
+        if (reach.redirect_url) techReach += `, redirects to ${esc(reach.redirect_url)}`;
+    } else if (reach.ssl_error) {
+        techReach = 'SSL certificate error';
+    } else {
+        techReach = esc(reach.error_message || 'Not reachable');
+    }
+
+    let techZs = '';
+    if (zs.error) {
+        techZs = esc(zs.error);
+    } else {
+        techZs = `Verdict: ${esc(zs.verdict || 'UNKNOWN')}`;
+        if (zs.verdict_rule) techZs += `, Rule: ${esc(zs.verdict_rule)}`;
+        if (zs.categories && zs.categories.length) techZs += `<br>Categories: ${zs.categories.map(c => esc(c)).join(', ')}`;
+    }
+
+    list.innerHTML = `
+        <div class="diag-card diag-type-${d.verdict_type}">
+            <div class="diag-verdict">
+                <span class="icon">${icons[d.verdict_type] || ''}</span>
+                <span>${d.verdict}</span>
+            </div>
+            <div class="diag-details">
+                <div class="diag-detail-grid">
+                    <div class="diag-detail-box">
+                        <h4>Website Status</h4>
+                        <p>${websiteStatus}</p>
+                    </div>
+                    <div class="diag-detail-box">
+                        <h4>School Filter Status</h4>
+                        <p>${filterStatus}</p>
+                    </div>
+                </div>
+                <div class="diag-detail-box diag-action-box">
+                    <h4>What to do</h4>
+                    <p>${whatToDo}</p>
+                </div>
+                ${(d.groups_with_access && d.groups_with_access.length) ? `
+                <div class="diag-detail-box" style="margin-top:8px;">
+                    <h4>Groups that have access</h4>
+                    <p>${d.groups_with_access.map(g => esc(g)).join(', ')}</p>
+                </div>` : (d.verdict_type === 'zscaler_blocked' || d.verdict_type === 'zscaler_caution') ? `
+                <div class="diag-detail-box" style="margin-top:8px;">
+                    <h4>Groups that have access</h4>
+                    <p style="color:var(--text-dim);">No student groups have access to this site</p>
+                </div>` : ''}
+                <details>
+                    <summary>Technical details (for IT)</summary>
+                    <div class="diag-detail-grid">
+                        <div class="diag-detail-box">
+                            <h4>Reachability</h4>
+                            <p>${techReach}</p>
+                        </div>
+                        <div class="diag-detail-box">
+                            <h4>Zscaler Filtering</h4>
+                            <p>${techZs}</p>
+                        </div>
+                    </div>
+                    <div class="diag-note">
+                        Reachability is checked from this server, not your device. Results may differ on student devices.
+                    </div>
+                </details>
+            </div>
+        </div>`;
+}
+
+async function checkBatch() {
+    const text = document.getElementById('urls-input').value;
+    const urls = text.split('\n').map(u => u.trim()).filter(u => u && !u.startsWith('#'));
+    if (!urls.length) return;
+
+    const sel = document.getElementById('group-select');
+    if (!sel.value) {
+        sel.style.borderColor = 'var(--red)';
+        sel.focus();
+        showError('Please select a grade level before checking.');
+        return;
+    }
+    sel.style.borderColor = '';
+
+    showLoading(`Checking ${urls.length} URL${urls.length>1?'s':''}...`);
+
+    try {
+        const r = await fetch('/api/check-batch', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({urls}) });
+        const d = await r.json();
+        hideLoading();
+        if (d.error) { showError(d.error); return; }
+        allResults = d.results;
+        render(allResults);
+    } catch(e) {
+        hideLoading();
+        showError('Network error: ' + e.message);
+    }
+}
+
+function render(results) {
+    const list = document.getElementById('results-list');
+    const sec = document.getElementById('results');
+    list.innerHTML = '';
+    sec.classList.add('visible');
+
+    let blocked=0, caution=0, allowed=0;
+    results.forEach(r => {
+        if (r.verdict==='BLOCKED') blocked++;
+        else if (r.verdict==='CAUTION') caution++;
+        else allowed++;
+    });
+
+    document.getElementById('results-title').textContent = results.length === 1 ? 'Result' : `Results (${results.length})`;
+
+    const parts = [];
+    if (blocked) parts.push(blocked + ' blocked');
+    if (caution) parts.push(caution + ' caution');
+    if (allowed) parts.push(allowed + ' allowed');
+    document.getElementById('results-summary').textContent = parts.join(', ');
+    document.getElementById('btn-csv').style.display = results.length > 1 ? '' : 'none';
+
+    results.forEach((r, i) => {
+        if (r.error && !r.verdict) {
+            list.innerHTML += `<div class="error-card"><b>${esc(r.url||'')}</b>: ${esc(r.error)}</div>`;
+            return;
+        }
+        list.innerHTML += cardHTML(r, i);
+    });
+}
+
+function cardHTML(r, idx) {
+    const verdict = r.verdict || 'ALLOWED';
+    const verdictLabel = verdict === 'BLOCKED' ? 'Blocked' : verdict === 'CAUTION' ? 'Caution' : 'Allowed';
+
+    // Categories
+    const cats = (r.categories||[]).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('');
+
+    // User/group info
+    let userHint = '';
+    if (r.user) {
+        const groups = (r.user.groups || []).map(g => esc(g)).join(', ');
+        if (r.user.email) {
+            userHint = `<div class="card-rule-hint" style="color:var(--accent);">Checked as: ${esc(r.user.email)} (${groups})</div>`;
+        } else if (groups) {
+            userHint = `<div class="card-rule-hint" style="color:var(--accent);">Checked for: ${groups}</div>`;
+        }
+    }
+
+    // Rule hint
+    let hint = '';
+    if (r.verdict_rule) {
+        const hintLabel = verdict === 'BLOCKED' ? 'Blocked by' : verdict === 'ALLOWED' ? 'Allowed by' : 'Flagged by';
+        hint = `<div class="card-rule-hint">${hintLabel}: ${esc(r.verdict_rule)}</div>`;
+    }
+
+    // Security
+    const secBar = r.security_alert ? `<div class="security-bar">Security threat detected by Zscaler</div>` : '';
+
+    let levelsHTML = '';
+
+    // Detail: rules table
+    const rules = r.rules || [];
+    const blockRules = rules.filter(r => r.action === 'BLOCK' || r.action === 'CAUTION');
+    const allowRules = rules.filter(r => r.action !== 'BLOCK' && r.action !== 'CAUTION');
+    let rulesTable = '';
+
+    function ruleRow(rule) {
+        const actClass = rule.action === 'BLOCK' ? 'act-BLOCK' : rule.action === 'CAUTION' ? 'act-CAUTION' : 'act-ALLOW';
+        const triggerCats = (rule.categories||[]).map(c => esc(c)).join(', ') || '-';
+        return `<tr>
+            <td style="color:var(--text-dim);">${rule.order||''}</td>
+            <td style="font-weight:500;">${esc(rule.name)}</td>
+            <td class="${actClass}">${esc(rule.action)}</td>
+            <td class="scope">${esc(rule.scope)}</td>
+            <td><span class="cat-tag">${triggerCats}</span></td>
+        </tr>`;
+    }
+
+    if (verdict === 'ALLOWED' && allowRules.length) {
+        // Allowed — show allow rules prominently at top, blocking note at bottom
+        const rows = allowRules.map(ruleRow).join('');
+        rulesTable = `
+            <div class="detail-section">
+                <div class="detail-label" style="color:var(--green);">Allowed by</div>
+                <table class="rules-tbl">
+                    <thead><tr><th>#</th><th>Rule</th><th>Action</th><th>Applies To</th><th>Triggered By</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div style="margin-top:12px; color:var(--text-dim); font-size:13px;">No blocking rules apply to this group for this URL.</div>
+            </div>`;
+    } else if (blockRules.length) {
+        const rows = blockRules.map(ruleRow).join('');
+        const allowToggle = allowRules.length
+            ? `<div style="margin-top:10px;">
+                <button class="btn btn-outline btn-sm" onclick="toggleAllow(${idx})">
+                    Show ${allowRules.length} allow rule${allowRules.length>1?'s':''}
+                </button>
+                <table class="rules-tbl allow-rules" id="allow-${idx}" style="display:none; margin-top:8px;">
+                    <tbody>${allowRules.map(ruleRow).join('')}</tbody>
+                </table>
+               </div>`
+            : '';
+        rulesTable = `
+            <div class="detail-section">
+                <div class="detail-label">Blocking & Caution Rules</div>
+                <table class="rules-tbl">
+                    <thead><tr><th>#</th><th>Rule</th><th>Action</th><th>Applies To</th><th>Triggered By</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                ${allowToggle}
+            </div>`;
+    } else if (allowRules.length) {
+        rulesTable = `
+            <div class="detail-section">
+                <div class="detail-label" style="color:var(--green);">Allowed by</div>
+                <table class="rules-tbl">
+                    <thead><tr><th>#</th><th>Rule</th><th>Action</th><th>Applies To</th><th>Triggered By</th></tr></thead>
+                    <tbody>${allowRules.map(ruleRow).join('')}</tbody>
+                </table>
+            </div>`;
+    } else {
+        rulesTable = `<div class="detail-section"><div class="detail-label">No filtering rules match this URL.</div></div>`;
+    }
+
+    let levelDetail = '';
+
+    return `
+        <div class="card" id="card-${idx}">
+            <div class="card-top" onclick="toggle(${idx})">
+                <div class="card-verdict verdict-${verdict}">${verdictLabel}</div>
+                <div class="card-info">
+                    <div class="card-url">${esc(r.url)}</div>
+                    <div class="card-cats">${cats || '<span class="cat-tag">Uncategorized</span>'}</div>
+                    ${userHint}
+                    ${hint}
+                </div>
+                ${levelsHTML}
+                <div class="card-chevron">&#8250;</div>
+            </div>
+            ${secBar}
+            <div class="card-detail">
+                ${levelDetail}
+                ${rulesTable}
+            </div>
+        </div>`;
+}
+
+function toggle(idx) {
+    document.getElementById('card-' + idx).classList.toggle('open');
+}
+
+function toggleAllow(idx) {
+    const tbl = document.getElementById('allow-' + idx);
+    if (!tbl) return;
+    const btn = tbl.previousElementSibling;
+    if (tbl.style.display === 'none') {
+        tbl.style.display = '';
+        if (btn && btn.tagName === 'BUTTON') btn.textContent = 'Hide allow rules';
+    } else {
+        tbl.style.display = 'none';
+        if (btn && btn.tagName === 'BUTTON') btn.textContent = btn.textContent.replace('Hide', 'Show');
+    }
+}
+
+function exportCSV() {
+    if (!allResults.length) return;
+    const headers = ['URL', 'Verdict', 'Categories', 'Blocking Rule', 'Security Alert'];
+
+    const rows = allResults.map(r => [
+        r.url,
+        r.verdict || '',
+        (r.categories||[]).join('; '),
+        r.verdict_rule || '',
+        r.security_alert ? 'YES' : 'NO',
+    ]);
+
+    const csv = [headers, ...rows].map(row =>
+        row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')
+    ).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'url-check-results.csv';
+    a.click();
+}
+
+function showLoading(t) {
+    document.getElementById('loading').classList.add('visible');
+    document.getElementById('loading-text').textContent = t;
+    document.getElementById('results').classList.remove('visible');
+    setButtons(true);
+}
+function hideLoading() {
+    document.getElementById('loading').classList.remove('visible');
+    setButtons(false);
+}
+function showError(msg) {
+    const sec = document.getElementById('results');
+    document.getElementById('results-list').innerHTML = `<div class="error-card">${esc(msg)}</div>`;
+    sec.classList.add('visible');
+    document.getElementById('results-summary').textContent = '';
+    document.getElementById('btn-csv').style.display = 'none';
+    document.getElementById('results-title').textContent = 'Error';
+}
+function setButtons(disabled) {
+    document.getElementById('btn-go').disabled = disabled;
+    document.getElementById('btn-batch').disabled = disabled;
+    document.getElementById('btn-diagnose').disabled = disabled;
+    document.getElementById('group-select').disabled = disabled;
+}
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ── Policy Overview ──────────────────────
+let allRulesData = null;
+let groupsList = null;
+
+let canViewPolicy = false;
+function showView(view) {
+    if (view === 'policy' && !canViewPolicy) {
+        view = 'checker';
+    }
+    document.getElementById('checker-view').style.display = view === 'checker' ? 'block' : 'none';
+    document.getElementById('policy-view').style.display = view === 'policy' ? 'block' : 'none';
+    document.getElementById('nav-checker').classList.toggle('active', view === 'checker');
+    document.getElementById('nav-policy').classList.toggle('active', view === 'policy');
+
+    if (view === 'policy' && !allRulesData) {
+        loadAllRules();
+        loadGroups();
+    }
+}
+
+function setPolicyTab(tab) {
+    document.getElementById('tab-rules').classList.toggle('active', tab === 'rules');
+    document.getElementById('tab-compare').classList.toggle('active', tab === 'compare');
+    document.getElementById('rules-view').style.display = tab === 'rules' ? 'block' : 'none';
+    document.getElementById('compare-view').style.display = tab === 'compare' ? 'block' : 'none';
+}
+
+// ── All Rules ────────────────────────────
+async function loadAllRules() {
+    document.getElementById('rules-loading').classList.add('visible');
+    document.getElementById('rules-table-wrap').innerHTML = '';
+
+    try {
+        const r = await fetch('/api/all-rules');
+        const d = await r.json();
+        document.getElementById('rules-loading').classList.remove('visible');
+
+        if (d.error) {
+            document.getElementById('rules-table-wrap').innerHTML = `<div class="error-card">${esc(d.error)}</div>`;
+            return;
+        }
+
+        allRulesData = d.rules;
+        renderRules(allRulesData);
+    } catch(e) {
+        document.getElementById('rules-loading').classList.remove('visible');
+        document.getElementById('rules-table-wrap').innerHTML = `<div class="error-card">Error: ${esc(e.message)}</div>`;
+    }
+}
+
+function renderRules(rules) {
+    const filter = (document.getElementById('rules-filter').value || '').toLowerCase();
+    const filtered = filter
+        ? rules.filter(r => r.name.toLowerCase().includes(filter) || r.scope.toLowerCase().includes(filter) || r.categories.some(c => c.toLowerCase().includes(filter)))
+        : rules;
+
+    document.getElementById('rules-stats').textContent = `${filtered.length} of ${rules.length} rules`;
+
+    if (!filtered.length) {
+        document.getElementById('rules-table-wrap').innerHTML = '<p style="text-align:center; color:var(--text-dim); padding:32px;">No rules found.</p>';
+        return;
+    }
+
+    const rows = filtered.map(r => {
+        const actClass = r.action === 'BLOCK' ? 'act-BLOCK' : r.action === 'CAUTION' ? 'act-CAUTION' : 'act-ALLOW';
+        const catDisplay = r.category_count > 5
+            ? `<span class="cat-tag">${r.category_count} categories</span>`
+            : r.categories.map(c => `<span class="cat-tag">${esc(c)}</span>`).join(' ');
+        return `<tr>
+            <td style="color:var(--text-dim); text-align:center;">${r.order}</td>
+            <td style="font-weight:500;">${esc(r.name)}</td>
+            <td class="${actClass}" style="font-weight:600;">${r.action}</td>
+            <td class="scope">${esc(r.scope)}</td>
+            <td>${catDisplay}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('rules-table-wrap').innerHTML = `
+        <table class="policy-tbl">
+            <thead><tr><th style="width:40px;">#</th><th>Rule</th><th>Action</th><th>Applies To</th><th>Categories</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function filterRules() {
+    if (allRulesData) renderRules(allRulesData);
+}
+
+// ── Compare Groups ───────────────────────
+async function loadGroups() {
+    try {
+        const r = await fetch('/api/config-status');
+        const d = await r.json();
+        if (!d.discovered) return;
+
+        const all = [];
+        const labels = { groups: 'Group', departments: 'Department', location_groups: 'Location Group' };
+        for (const [type, entities] of Object.entries(d.discovered)) {
+            for (const e of (entities || [])) {
+                all.push({ id: e.id, name: e.name, type, label: labels[type] || type });
+            }
+        }
+        groupsList = all;
+
+        const selA = document.getElementById('compare-a');
+        const selB = document.getElementById('compare-b');
+        const opts = all.map(g => `<option value="${g.id}">${esc(g.name)} (${g.label})</option>`).join('');
+        selA.innerHTML = opts;
+        selB.innerHTML = opts;
+
+        if (all.length > 1) selB.selectedIndex = 1;
+    } catch(e) {}
+}
+
+async function runCompare() {
+    const aId = document.getElementById('compare-a').value;
+    const bId = document.getElementById('compare-b').value;
+    if (!aId || !bId) return;
+
+    const aName = document.getElementById('compare-a').selectedOptions[0].text;
+    const bName = document.getElementById('compare-b').selectedOptions[0].text;
+
+    document.getElementById('compare-loading').classList.add('visible');
+    document.getElementById('compare-results').innerHTML = '';
+
+    try {
+        const r = await fetch('/api/compare-groups', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ group_a_id: aId, group_b_id: bId }),
+        });
+        const d = await r.json();
+        document.getElementById('compare-loading').classList.remove('visible');
+
+        if (d.error) {
+            document.getElementById('compare-results').innerHTML = `<div class="error-card">${esc(d.error)}</div>`;
+            return;
+        }
+
+        renderCompare(d, aName, bName);
+    } catch(e) {
+        document.getElementById('compare-loading').classList.remove('visible');
+        document.getElementById('compare-results').innerHTML = `<div class="error-card">Error: ${esc(e.message)}</div>`;
+    }
+}
+
+function renderCompare(data, aName, bName) {
+    function ruleTable(rules, emptyMsg) {
+        if (!rules.length) return `<p style="color:var(--text-dim); padding:12px; font-size:13px;">${emptyMsg}</p>`;
+        const rows = rules.map(r => {
+            const actClass = r.action === 'BLOCK' ? 'act-BLOCK' : r.action === 'CAUTION' ? 'act-CAUTION' : 'act-ALLOW';
+            return `<tr>
+                <td style="color:var(--text-dim); text-align:center;">${r.order}</td>
+                <td style="font-weight:500;">${esc(r.name)}</td>
+                <td class="${actClass}" style="font-weight:600;">${r.action}</td>
+                <td>${r.category_count} categories</td>
+            </tr>`;
+        }).join('');
+        return `<table class="policy-tbl">
+            <thead><tr><th style="width:40px;">#</th><th>Rule</th><th>Action</th><th>Categories</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    const onlyABlocks = data.only_a.filter(r => r.action === 'BLOCK' || r.action === 'CAUTION');
+    const onlyBBlocks = data.only_b.filter(r => r.action === 'BLOCK' || r.action === 'CAUTION');
+    const onlyAAllows = data.only_a.filter(r => r.action === 'ALLOW');
+    const onlyBAllows = data.only_b.filter(r => r.action === 'ALLOW');
+
+    let html = '';
+
+    if (onlyABlocks.length || onlyBBlocks.length) {
+        html += `<div style="margin-bottom:20px;">
+            <h3 style="font-size:14px; margin-bottom:8px; color:var(--red);">Differences — Blocking Rules</h3>`;
+
+        if (onlyABlocks.length) {
+            html += `<div style="margin-bottom:12px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; color:var(--text-dim); margin-bottom:6px;">Only applies to ${esc(aName)}</div>
+                ${ruleTable(onlyABlocks, '')}
+            </div>`;
+        }
+        if (onlyBBlocks.length) {
+            html += `<div style="margin-bottom:12px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; color:var(--text-dim); margin-bottom:6px;">Only applies to ${esc(bName)}</div>
+                ${ruleTable(onlyBBlocks, '')}
+            </div>`;
+        }
+        html += '</div>';
+    }
+
+    if (onlyAAllows.length || onlyBAllows.length) {
+        html += `<div style="margin-bottom:20px;">
+            <h3 style="font-size:14px; margin-bottom:8px; color:var(--green);">Differences — Allow Rules</h3>`;
+
+        if (onlyAAllows.length) {
+            html += `<div style="margin-bottom:12px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; color:var(--text-dim); margin-bottom:6px;">Only applies to ${esc(aName)}</div>
+                ${ruleTable(onlyAAllows, '')}
+            </div>`;
+        }
+        if (onlyBAllows.length) {
+            html += `<div style="margin-bottom:12px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; color:var(--text-dim); margin-bottom:6px;">Only applies to ${esc(bName)}</div>
+                ${ruleTable(onlyBAllows, '')}
+            </div>`;
+        }
+        html += '</div>';
+    }
+
+    if (!data.only_a.length && !data.only_b.length) {
+        html += '<p style="text-align:center; color:var(--text-dim); padding:32px;">These groups have identical filtering rules.</p>';
+    }
+
+    html += `<details style="margin-top:16px;">
+        <summary style="font-size:12px; color:var(--text-dim); cursor:pointer;">${data.shared.length} shared rules (same for both groups)</summary>
+        <div style="margin-top:8px;">${ruleTable(data.shared, 'No shared rules.')}</div>
+    </details>`;
+
+    document.getElementById('compare-results').innerHTML = html;
+}
+</script>
+</body>
+</html>
